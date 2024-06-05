@@ -1,1 +1,112 @@
-print("Hello World")
+import json
+
+# Helper Functions
+def load_data(filename):
+    try:
+        with open(filename, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+def save_data(filename, data):
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+
+def validate_input(prompt, type_=None, min_=None, max_=None, range_=None):
+    while True:
+        inp = input(prompt)
+        if type_:
+            try:
+                inp = type_(inp)
+            except ValueError:
+                print(f"Invalid input type. Expected {type_.__name__}.")
+                continue
+        if min_ is not None and inp < min_:
+            print(f"Input should be at least {min_}.")
+        elif max_ is not None and inp > max_:
+            print(f"Input should be no more than {max_}.")
+        elif range_ and inp not in range_:
+            print(f"Input should be within {range_}.")
+        else:
+            return inp
+
+# Main Functions
+def add_record(data):
+    print("\nAdding a new student record.")
+    first_name = validate_input("Enter first name: ")
+    last_name = validate_input("Enter last name: ")
+    address = validate_input("Enter address: ")
+    student_class = validate_input("Enter class: ")
+    grades = {}
+    subjects = ["Math", "Science", "English", "Dutch", "Arts"]
+    for subject in subjects:
+        grade = validate_input(f"Enter grade for {subject}: ", type_=int, min_=0, max_=100)
+        grades[subject] = grade
+
+    student = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "address": address,
+        "class": student_class,
+        "grades": grades
+    }
+    data.append(student)
+    print("Student record added successfully.")
+
+def delete_record(data):
+    print("\nDeleting a student record.")
+    first_name = validate_input("Enter first name of the student to delete: ")
+    last_name = validate_input("Enter last name of the student to delete: ")
+
+    for student in data:
+        if student['first_name'] == first_name and student['last_name'] == last_name:
+            confirm = validate_input("Are you sure you want to delete this record? (yes/no): ", range_=["yes", "no"])
+            if confirm == "yes":
+                data.remove(student)
+                print("Student record deleted successfully.")
+                return
+    print("Student not found.")
+
+def edit_record(data):
+    print("\nEditing a student record.")
+    first_name = validate_input("Enter first name of the student to edit: ")
+    last_name = validate_input("Enter last name of the student to edit: ")
+
+    for student in data:
+        if student['first_name'] == first_name and student['last_name'] == last_name:
+            field = validate_input("Enter the field to edit (first_name, last_name, address, class, grades): ", range_=["first_name", "last_name", "address", "class", "grades"])
+            if field == "grades":
+                subject = validate_input("Enter the subject to edit (Math, Science, English, Dutch, Arts): ", range_=["Math", "Science", "English", "Dutch", "Arts"])
+                new_grade = validate_input(f"Enter new grade for {subject}: ", type_=int, min_=0, max_=100)
+                student["grades"][subject] = new_grade
+            else:
+                new_value = validate_input(f"Enter new value for {field}: ")
+                student[field] = new_value
+            print("Student record updated successfully.")
+            return
+    print("Student not found.")
+
+def search_students(data):
+    print("\nSearch students.")
+    option = validate_input("Search by (first_name/last_name/class): ", range_=["first_name", "last_name", "class"])
+    value = validate_input(f"Enter {option}: ")
+    
+    results = []
+    for student in data:
+        if student[option] == value:
+            results.append(student)
+    
+    if not results:
+        print("No matching students found.")
+    else:
+        for student in results:
+            print(json.dumps(student, indent=4))
+
+def calculate_grades(data):
+    print("\nCalculating grades.")
+    for student in data:
+        grades = student["grades"].values()
+        total = sum(grades)
+        average = total / len(grades)
+        student["total"] = total
+
