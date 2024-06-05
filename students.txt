@@ -1,0 +1,4 @@
+FIRSTNAME LASTNAME    ADRESS                    MATH SCIENCE ENGLISH DUTCH ARTS
+Elias     Skau        WouterVanDoeverenplein60  7    7       7       7     7
+Lieve     Visser      WouterVanDoeverenplein61  8    8       8       8     8
+Nolan     Heinrich    WouterVanDoeverenplein62  9    9       9       9     9
