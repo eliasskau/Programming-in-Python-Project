@@ -1,0 +1,195 @@
+# Helper Functions
+def load_data(filename = "project.txt"):
+    data = []
+    try:
+        with open (filename , 'r') as file:
+            for line in file:
+                student = eval(line.strip())
+                data.append(student)
+    except FileNotFoundError:
+        pass
+    return data
+
+def save_data(filename, data):
+    with open(filename, 'w') as file:
+        for student in data:
+            file.write(f"{student}\n")
+
+def validate_input(prompt, type_=None, min_=None, max_=None, range_=None):
+    while True:
+        inp = input(prompt)
+        if type_:
+            try:
+                inp = type_(inp)
+            except ValueError:
+                print(f"Invalid input type. Expected {type_.__name__}.")
+                continue
+        if min_ is not None and inp < min_:
+            print(f"Input should be at least {min_}.")
+        elif max_ is not None and inp > max_:
+            print(f"Input should be no more than {max_}.")
+        elif range_ and inp not in range_:
+            print(f"Input should be within {range_}.")
+        else:
+            return inp
+
+# Main Functions
+def add_record(data):
+    print("\nAdding a new student record.")
+    first_name = input("Enter first name: ")
+    last_name = input("Enter last name: ")
+    address = input("Enter address: ")
+    student_class = input("Enter class: ")
+    grades = {}
+    subjects = ["Math", "Science", "English", "Dutch", "Arts"]
+    for subject in subjects:
+        grade = validate_input(f"Enter grade for {subject}: ", type_=int, min_=0, max_=100)
+        grades[subject] = grade
+
+    student = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "address": address,
+        "class": student_class,
+        "grades": grades
+    }
+    data.append(student)
+    print("Student record added successfully.")
+
+def delete_record(data):
+    print("\nDeleting a student record.")
+    first_name = input("Enter first name of the student to delete: ")
+    last_name = input("Enter last name of the student to delete: ")
+
+    for student in data:
+        if student['first_name'] == first_name and student['last_name'] == last_name:
+            confirm = input("Are you sure you want to delete this record? (yes/no): ")
+            if confirm.lower() == "yes":
+                data.remove(student)
+                print("Student record deleted successfully.")
+                return
+    print("Student not found.")
+
+def edit_record(data):
+    print("\nEditing a student record.")
+    first_name = input("Enter first name of the student to edit: ")
+    last_name = input("Enter last name of the student to edit: ")
+
+    for student in data:
+        if student['first_name'] == first_name and student['last_name'] == last_name:
+            field = input("Enter the field to edit (first_name, last_name, address, class, grades): ")
+            if field == "grades":
+                subject = input("Enter the subject to edit (Math, Science, English, Dutch, Arts): ")
+                new_grade = validate_input(f"Enter new grade for {subject}: ", type_=int, min_=0, max_=100)
+                student["grades"][subject] = new_grade
+            else:
+                new_value = input(f"Enter new value for {field}: ")
+                student[field] = new_value
+            print("Student record updated successfully.")
+            return
+    print("Student not found.")
+
+def search_students(data):
+    print("\nSearch students.")
+    option = input("Search by (first_name/last_name/class): ")
+    value = input(f"Enter {option}: ")
+    
+    results = []
+    for student in data:
+        if student[option] == value:
+            results.append(student)
+    
+    if not results:
+        print("No matching students found.")
+    else:
+        for student in results:
+            print(student)
+
+def calculate_grades(data):
+    print("\nCalculating grades.")
+    class_averages = {}
+    for student in data:
+        grades = list(student["grades"].values())
+        total = sum(grades)
+        average = total / len(grades)
+        student["total"] = total
+        student["average"] = average
+        print(f"{student['first_name']} {student['last_name']} - Total: {total}, Average: {average:.2f}")
+
+        student_class = student['class']
+        if student_class not in class_averages:
+            class_averages[student_class] = []
+        class_averages[student_class].append(average)
+
+    highest_avg_class = None
+    highest_avg = 0
+    for student_class, averages in class_averages.items():
+        class_avg = sum(averages) / len(averages)
+        if class_avg > highest_avg:
+            highest_avg = class_avg
+            highest_avg_class = student_class
+        print(f"Class {student_class} - Average: {class_avg:.2f}")
+
+    print(f"Class with highest average: {highest_avg_class} - {highest_avg:.2f}")
+
+def change_grade():
+    name = input("What is the name of the student you want to change the grade for: ")
+
+    lines = []
+    found = False
+    with open(filename) as f:
+        for line in f:
+            t = line.split()
+            if t[0] == name:
+                found = True
+                print(t[0], "has a grade of", t[1])
+                check = input("Are you sure you want to change his grade: ")
+                if check.lower() == "yes":
+                    newgrade = input("Please enter the new grade: ")
+                    line = line.replace(t[1], newgrade)
+                    print("Updated record:", line)
+                else:
+                    print("Nothing has changed")
+            lines.append(line)
+
+    if not found:
+        print("Student not found.")
+
+    with open("newfile.txt", "w") as f:
+        for line in lines:
+            f.write(line)
+
+def main():
+    data = load_data('students.txt')
+
+    while True:
+        print("\nSchool Management System")
+        print("1. Add a new record")
+        print("2. Delete a record")
+        print("3. Edit a record")
+        print("4. Search students")
+        print("5. Calculate grades")
+        print("6. Change grade from file")
+        print("7. Exit")
+
+        choice = validate_input("Choose an option: ", type_=int, min_=1, max_=7)
+        
+        if choice == 1:
+            add_record(data)
+        elif choice == 2:
+            delete_record(data)
+        elif choice == 3:
+            edit_record(data)
+        elif choice == 4:
+            search_students(data)
+        elif choice == 5:
+            calculate_grades(data)
+        elif choice == 6:
+            change_grade()
+        elif choice == 7:
+            save_data(filename, data)
+            print("Exiting the program. Goodbye!")
+            break
+
+if __name__ == "__main__":
+    main()
